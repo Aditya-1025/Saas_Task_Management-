@@ -27,10 +27,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
 
-// DB init — rejectable promise (no .catch, so errors surface properly)
+// DB init — in production skip sync (tables exist), just verify connection
 const dbReady = sequelize
   .authenticate()
-  .then(() => sequelize.sync()) // creates tables if they don't exist
+  .then(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      return sequelize.sync(); // create tables in local dev
+    }
+    // production: tables already exist in Supabase, skip sync entirely
+  })
   .then(() => console.log('✅ Database ready'));
 
 // Wait for DB before handling ANY request (fixes cold-start race condition on Vercel)
