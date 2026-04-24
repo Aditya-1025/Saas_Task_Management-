@@ -30,19 +30,19 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-const start = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('✅ Database connected');
-    // sync models – use { alter: true } in dev, migrations in prod
-    await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
-    console.log('✅ Models synced');
+// Initialise DB: authenticate + sync (create tables if not exist)
+const dbReady = sequelize
+  .authenticate()
+  .then(() => sequelize.sync()) // safe: only creates missing tables, never drops
+  .then(() => console.log('✅ Database ready'))
+  .catch((err) => console.error('❌ DB init error:', err.message));
 
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-  } catch (err) {
-    console.error('❌ Failed to start server:', err.message);
-    process.exit(1);
-  }
-};
+if (process.env.NODE_ENV !== 'production') {
+  // Local dev: wait for DB then start the HTTP server
+  dbReady.then(() =>
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`))
+  );
+}
 
-start();
+// Vercel serverless: export the Express app directly
+module.exports = app;

@@ -24,7 +24,7 @@ const taskValidation = [
     .optional()
     .isIn(['low', 'medium', 'high'])
     .withMessage('Invalid priority value'),
-  body('due_date').optional().isDate().withMessage('Invalid date format'),
+  body('due_date').optional({ checkFalsy: true }).isDate().withMessage('Invalid date format'),
 ];
 
 router.route('/').get(getTasks).post(taskValidation, createTask);

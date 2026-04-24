@@ -16,6 +16,12 @@ const sequelize = new Sequelize(
       acquire: 30000,
       idle: 10000,
     },
+    // Supabase (and most cloud Postgres) require SSL in production
+    ...(process.env.NODE_ENV !== 'development' && {
+      dialectOptions: {
+        ssl: { require: true, rejectUnauthorized: false },
+      },
+    }),
   }
 );
 
