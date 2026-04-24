@@ -11,8 +11,17 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
 
-// Core middleware
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*', credentials: true }));
+// CORS — must come before all routes and handle OPTIONS preflight explicitly
+const corsOptions = {
+  // 'true' reflects the request origin (works with credentials); '*' does NOT work with credentials
+  origin: process.env.CORS_ORIGIN || true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // handle preflight for all routes (required on Vercel serverless)
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
